@@ -4,4 +4,5 @@ import "gorm_sample/samples"
 
 func main() {
 	samples.TestScrape()
+	samples.TestReadCSVFile()
 }
