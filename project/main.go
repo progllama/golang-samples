@@ -2,53 +2,34 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-
-	"github.com/jaswdr/faker"
+	"github.com/PuerkitoBio/goquery"
 )
 
-type User struct {
-	gorm.Model
-	Name    string
-	Gender  string
-	Address string
+func main() {
+	TestScrape()
 }
 
-func main() {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+func TestScrape() {
+	// Request the html page.
+	res, err := http.Get("https://finance.yahoo.com/quote/ORCL")
 	if err != nil {
-		panic("failed to connect database")
+		fmt.Println(err)
+		return
 	}
 
-	u := [100]User{}
-	var users []User = u[:]
-
-	faker := faker.New()
-	person := faker.Person()
-	address := faker.Address()
-	for i := 0; i < 100; i++ {
-		users[i] = User{
-			Name:    person.Name(),
-			Gender:  person.Gender(),
-			Address: address.Address(),
-		}
+	// Load the html document.
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	db.AutoMigrate(User{})
-
-	// db.Create(&users)
-
-	// db.Select("*").Find(&users)
-
-	// for _, u := range users {
-	// 	fmt.Println(u.ID, u.Name, u.Gender, u.Address)
-	// }
-
-	user := User{}
-	user.ID = 10
-
-	db.Take(&user)
-	fmt.Println(user.ID, user.Name, user.Gender, user.Address)
+	// Find the review items
+	doc.Find("#quote-header-info").Each(func(i int, s *goquery.Selection) {
+		// for each item found, get the name.
+		name := s.Find("h1").Text()
+		fmt.Println(name)
+	})
 }
