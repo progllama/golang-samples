@@ -1,8 +1,9 @@
 package main
 
-import "gorm_sample/samples"
+import (
+	"gorm_sample/samples"
+)
 
 func main() {
-	samples.TestScrape()
-	samples.TestReadCSVFile()
+	samples.CollectCountryNamesByGoquery()
 }
