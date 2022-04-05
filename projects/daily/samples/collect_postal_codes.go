@@ -13,27 +13,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-// func CollectPostalCodes() {
-// 	res, err := http.Get("https://worldpostalcode.com/japan/")
-// 	if err != nil {
-// 		log.Print(err)
-// 		return
-// 	}
-
-// 	doc, err := goquery.NewDocumentFromResponse(res)
-// 	if err != nil {
-// 		log.Println(err)
-// 	}
-
-// 	// countryPostalCodes := make(map[string]map[string]string)
-
-// 	doc.Find(".regions").Each(func(i int, s *goquery.Selection) {
-// 		region := s.
-// 	})
-
-// 	fmt.Println(countryPostalCodes)
-// }
-
 func CollectCountryNamesByGoquery() {
 	url := "https://www.mofa.go.jp/mofaj/area/index.html"
 	countryNames := collectCountryNames(url)
