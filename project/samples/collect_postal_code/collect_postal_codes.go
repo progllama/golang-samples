@@ -1,4 +1,4 @@
-package samples
+package collectpostalcode
 
 import (
 	"bytes"

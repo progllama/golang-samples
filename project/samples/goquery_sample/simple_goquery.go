@@ -1,4 +1,4 @@
-package samples
+package goquery_sample
 
 import (
 	"encoding/csv"

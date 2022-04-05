@@ -1,4 +1,4 @@
-package samples
+package tar_sample
 
 import (
 	"archive/tar"
