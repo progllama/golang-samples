@@ -11,6 +11,32 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+type WebSpider struct {
+	url     string
+	keyword string
+	setting WebSpiderSetting
+}
+
+type WebSpiderSetting struct {
+}
+
+func NewWebSpider(url string, keyword string, setting WebSpiderSetting) *WebSpider {
+	return &WebSpider{
+		url:     url,
+		keyword: keyword,
+		setting: setting,
+	}
+}
+
+func (ws *WebSpider) Run() {
+
+}
+
+func GoquerySample() {
+	ws := NewWebSpider()
+	ws.Run()
+}
+
 func TestScrape() {
 	// Request the html page.
 	res, err := http.Get("https://finance.yahoo.com/quote/ORCL")

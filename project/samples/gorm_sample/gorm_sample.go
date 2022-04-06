@@ -6,28 +6,58 @@ import (
 	"container/list"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 type Country struct {
-	Name string
+	gorm.Model
+	Name string `json:"name"`
 }
 
-func GormMain() {
-	countryNames := getCountryNames()
+var (
+	db  *gorm.DB
+	err error
+)
 
-	db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+func GormMain() {
+	// countryNames := getCountryNames()
+
+	db, err = gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 	if err != nil {
 		fmt.Printf("%s", err)
 		return
 	}
 
-	db.Table("Country")
+	// db.AutoMigrate(&Country{})
+
+	// countries := make([]Country, len(countryNames))
+
+	// for i, name := range countryNames {
+	// 	countries[i] = Country{Name: name}
+	// }
+
+	// db.CreateInBatches(countries, 100)
+
+	router := gin.Default()
+	router.GET("/countries", func(c *gin.Context) {
+		var countries []struct {
+			Name string
+		}
+		db.Model(&Country{}).Select("name").Find(&countries)
+
+		c.JSON(http.StatusOK, gin.H{"countries": countries})
+	})
+	router.GET("/countries/:name", func(c *gin.Context) {
+
+	})
+	router.Run()
 }
 
 func getCountryNames() []string {
