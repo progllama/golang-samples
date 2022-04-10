@@ -46,15 +46,10 @@ func RunYoutubeClient() {
 	key := os.Getenv("YOUTUBE_API_KEY")
 
 	ctx := context.Background()
-	client, err := youtube.NewService(ctx, option.WithAPIKey(key))
+	service, err := youtube.NewService(ctx, option.WithAPIKey(key))
 	if err != nil {
 		log.Fatal("Error creating new Youtube client: %v", err)
 	}
-
-	// service, err := youtube.New
-	// if err != nil {
-	// 	log.Fatal("Error creating new Youtube client: %v", err)
-	// }
 
 	call := service.Search.List([]string{"id, snippet"}).
 		Q("Blender").
