@@ -65,17 +65,32 @@ func (ws *WebSpider) Run() {
 	ws.document, _ = ws.buildDocument()
 	route := ws.findRoutesFromKeyWord()[ws.keyword]
 	ws.document.Find(strings.Join(route, " ")).Each(func(i int, s *goquery.Selection) {
-		fmt.Println(s.Text())
+		if s.Text() == "" {
+			return
+		}
+		// fmt.Printf("%-10s\n", "DATA")
+		fmt.Println(getLink(s))
+		// fmt.Println(s.Text())
 	})
 }
 
-func (ws *WebSpider) buildDocument() (*goquery.Document, error) {
-	// response, err := http.Get(ws.url)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// 	return &goquery.Document{}, err
-	// }
+func getLink(node *goquery.Selection) string {
+	currentNode := node
+	link := ""
+	for {
+		if goquery.NodeName(currentNode) == "a" && link == "" {
+			link, _ = currentNode.Attr("href")
+			break
+		}
+		if goquery.NodeName(currentNode) == "html" {
+			break
+		}
+		currentNode = currentNode.Parent()
+	}
+	return link
+}
 
+func (ws *WebSpider) buildDocument() (*goquery.Document, error) {
 	srcPage := setupDriver(ws.url)
 	sr := strings.NewReader(srcPage)
 
@@ -93,9 +108,10 @@ func (ws *WebSpider) findRoutesFromKeyWord() map[string][]string {
 	routes := make(map[string][]string, 0)
 	body := ws.document.Find("body")
 	body.Find("*").Each(func(i int, s *goquery.Selection) {
-		text := s.Clone().Children().Remove().End().Text()
-		if text == ws.keyword {
-			routes[text] = ws.findRouteFromNode(s)
+		content := s.Clone().Children().Remove().End().Text()
+		if content == ws.keyword {
+			route := ws.findRouteFromNode(s)
+			routes[content] = route
 		}
 	})
 	return routes
@@ -120,8 +136,8 @@ func (ws *WebSpider) findRouteFromNode(node *goquery.Selection) []string {
 
 func GoquerySample() {
 	ws := NewWebSpider(
-		"https://ja.wikipedia.org/wiki/%E5%9B%BD%E3%81%AE%E4%B8%80%E8%A6%A7_(%E5%A4%A7%E9%99%B8%E5%88%A5)",
-		"バクー",
+		"https://www.dmm.co.jp/search/=/searchstr=%E6%8A%98%E5%8E%9F%E3%82%86%E3%81%8B%E3%82%8A/analyze=V1ECC1YCUAI_/limit=30/n1=FgRCTw9VBA4GFlBVQ1oD/n2=Aw1fVhQKX0FZCEFUVmkKXhUAQF9UXAs_/sort=ranking/",
+		"「初めてがおばさんと生じ...",
 	)
 	ws.Run()
 }

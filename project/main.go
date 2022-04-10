@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gorm_sample/samples/web_video_player.go"
+	"gorm_sample/samples/web_video_player"
 )
 
 func main() {
