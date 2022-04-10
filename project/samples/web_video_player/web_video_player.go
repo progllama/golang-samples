@@ -26,6 +26,7 @@ func WebVideoPlayer() {
 		log.Fatal(err)
 	}
 	defer driver.Stop()
+
 	page, err := driver.NewPage()
 	if err != nil {
 		log.Fatal(err)
@@ -34,6 +35,7 @@ func WebVideoPlayer() {
 	// 自動操作
 	urls := getURL()
 	for _, url := range urls {
+
 		fmt.Println(url)
 		err = page.Navigate(url)
 		if err != nil {
@@ -43,31 +45,33 @@ func WebVideoPlayer() {
 
 		s := page.FindByLink("はい")
 		s.Click()
-		// s = page.FindByLink("無料サンプル動画を見る")
-		// var result string
-		// page.RunScript("document.querySelectorAll('#detail-sample-movie a')[0].click();", nil, &result)
-		// err = s.DoubleClick()
-		// time.Sleep(10)
 		s = page.Find("iframe:nth-child(1)")
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
 		s.SwitchToFrame()
 		s = page.FindByButton("再生/一時停止(Space)")
 		s.Click()
 		s.Click()
+
 		s = page.Find(".player")
 		text, _ := s.Text()
-		t := strings.Split(text, "\n")[1]
-		t = strings.Split(t, "/")[1]
-		t = strings.TrimSpace(t)
-		hour, _ := strconv.Atoi(strings.Split(t, ":")[0])
-		hour = hour * 3600
-		min, _ := strconv.Atoi(strings.Split(t, ":")[1])
-		min = min * 60
-		sec, _ := strconv.Atoi(strings.Split(t, ":")[2])
-		time.Sleep(time.Duration((hour + min + sec)) * time.Second)
+		duration := parseTime(text)
+		time.Sleep(duration)
+
+		page.CloseWindow()
 	}
+}
+
+func parseTime(txt string) time.Duration {
+	t := strings.Split(txt, "\n")[1]
+	t = strings.Split(t, "/")[1]
+	t = strings.TrimSpace(t)
+
+	hour, _ := strconv.Atoi(strings.Split(t, ":")[0])
+	hour = hour * 3600
+	min, _ := strconv.Atoi(strings.Split(t, ":")[1])
+	min = min * 60
+	sec, _ := strconv.Atoi(strings.Split(t, ":")[2])
+
+	return time.Duration(hour+min+sec) * time.Second
 }
 
 func getURL() []string {
@@ -84,3 +88,48 @@ func getURL() []string {
 	}
 	return urls
 }
+
+const DOWNLOAD_JS = `
+var canvas = document.querySelector("canvas");
+
+// Optional frames per second argument.
+var stream = canvas.captureStream(25);
+var recordedChunks = [];
+
+console.log(stream);
+var options = { mimeType: "video/webm; codecs=vp9" };
+mediaRecorder = new MediaRecorder(stream, options);
+
+mediaRecorder.ondataavailable = handleDataAvailable;
+mediaRecorder.start();
+
+function handleDataAvailable(event) {
+  console.log("data-available");
+  if (event.data.size > 0) {
+    recordedChunks.push(event.data);
+    console.log(recordedChunks);
+    download();
+  } else {
+    // ...
+  }
+}
+function download() {
+  var blob = new Blob(recordedChunks, {
+    type: "video/webm"
+  });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  document.body.appendChild(a);
+  a.style = "display: none";
+  a.href = url;
+  a.download = "test.webm";
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+// demo: to download after 9sec
+setTimeout(event => {
+  console.log("stopping");
+  mediaRecorder.stop();
+}, 9000);
+`
