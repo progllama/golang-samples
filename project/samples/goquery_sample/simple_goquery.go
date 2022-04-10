@@ -1,6 +1,7 @@
 package goquery_sample
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -135,11 +136,28 @@ func (ws *WebSpider) findRouteFromNode(node *goquery.Selection) []string {
 }
 
 func GoquerySample() {
+
 	ws := NewWebSpider(
 		"https://www.dmm.co.jp/search/=/searchstr=%E6%8A%98%E5%8E%9F%E3%82%86%E3%81%8B%E3%82%8A/analyze=V1ECC1YCUAI_/limit=30/n1=FgRCTw9VBA4GFlBVQ1oD/n2=Aw1fVhQKX0FZCEFUVmkKXhUAQF9UXAs_/sort=ranking/",
 		"「初めてがおばさんと生じ...",
 	)
 	ws.Run()
+}
+
+func readFile(path *string) []string {
+	f, err := os.Open(*path)
+	if err != nil {
+		log.Fatal(err)
+		return make([]string, 0)
+	}
+	defer f.Close()
+
+	lines := make([]string, 0)
+	bs := bufio.NewScanner(f)
+	for bs.Scan() {
+		lines = append(lines, bs.Text())
+	}
+	return lines
 }
 
 func TestScrape() {

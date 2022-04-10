@@ -16,7 +16,7 @@ func WebVideoPlayer() {
 	// Chromeを利用することを宣言
 	var driver *agouti.WebDriver = agouti.ChromeDriver(
 		agouti.ChromeOptions("args", []string{
-			// "--headless",
+			"--headless",
 			"--window-size=1280,800",
 		}),
 		agouti.Debug,
@@ -27,14 +27,20 @@ func WebVideoPlayer() {
 	}
 	defer driver.Stop()
 
-	page, err := driver.NewPage()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// page, err := driver.NewPage()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// 自動操作
 	urls := getURL()
+	data := make([]string, 0)
 	for _, url := range urls {
+
+		page, err := driver.NewPage()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Println(url)
 		err = page.Navigate(url)
@@ -47,17 +53,37 @@ func WebVideoPlayer() {
 		s.Click()
 		s = page.Find("iframe:nth-child(1)")
 		s.SwitchToFrame()
-		s = page.FindByButton("再生/一時停止(Space)")
-		s.Click()
-		s.Click()
+		// s = page.FindByButton("再生/一時停止(Space)")
+		// s.Click()
+		// s.Click()
 
-		s = page.Find(".player")
-		text, _ := s.Text()
-		duration := parseTime(text)
-		time.Sleep(duration)
+		// s = page.Find(".player")
+		// text, _ := s.Text()
+		// duration := parseTime(text)
+		// time.Sleep(duration)
 
+		s = page.Find("video")
+		txt, _ := s.Attribute("src")
+		data = append(data, txt)
 		page.CloseWindow()
 	}
+	saveText(data)
+}
+
+func saveText(text []string) {
+	path := "./samples/web_video_player/web_video_player_save_file/video_urls.txt"
+	f, err := os.Create(path)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer f.Close()
+
+	bw := bufio.NewWriter(f)
+	for _, line := range text {
+		bw.WriteString(line + "\n")
+	}
+	bw.Flush()
 }
 
 func parseTime(txt string) time.Duration {
