@@ -7,33 +7,122 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/sclevine/agouti"
 )
 
+// Using Version
+// wget https://chromedriver.storage.googleapis.com/100.0.4896.60/chromedriver_linux64.zip
+func setupDriver(url string) string {
+	var driver *agouti.WebDriver = agouti.ChromeDriver(
+		agouti.ChromeOptions("args", []string{
+			"--headless",
+			"--window-size=1280,800",
+		}),
+		agouti.Debug,
+	)
+
+	if err := driver.Start(); err != nil {
+		log.Fatal(err)
+	}
+	defer driver.Stop()
+
+	page, err := driver.NewPage()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// URL Setting
+	err = page.Navigate(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	src, err := page.HTML()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return src
+}
+
 type WebSpider struct {
-	url     string
-	keyword string
-	setting WebSpiderSetting
+	url      string
+	keyword  string
+	document *goquery.Document
 }
 
-type WebSpiderSetting struct {
-}
-
-func NewWebSpider(url string, keyword string, setting WebSpiderSetting) *WebSpider {
+func NewWebSpider(url string, keyword string) *WebSpider {
 	return &WebSpider{
-		url:     url,
-		keyword: keyword,
-		setting: setting,
+		url:      url,
+		keyword:  keyword,
+		document: nil,
 	}
 }
 
 func (ws *WebSpider) Run() {
+	ws.document, _ = ws.buildDocument()
+	route := ws.findRoutesFromKeyWord()[ws.keyword]
+	ws.document.Find(strings.Join(route, " ")).Each(func(i int, s *goquery.Selection) {
+		fmt.Println(s.Text())
+	})
+}
 
+func (ws *WebSpider) buildDocument() (*goquery.Document, error) {
+	// response, err := http.Get(ws.url)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// 	return &goquery.Document{}, err
+	// }
+
+	srcPage := setupDriver(ws.url)
+	sr := strings.NewReader(srcPage)
+
+	document, err := goquery.NewDocumentFromReader(sr)
+	if err != nil {
+		log.Fatal(err)
+		return &goquery.Document{}, err
+	}
+
+	return document, nil
+}
+
+// Routesと複数形の理由はキーワードに正規表現を使ったときを想定して。
+func (ws *WebSpider) findRoutesFromKeyWord() map[string][]string {
+	routes := make(map[string][]string, 0)
+	body := ws.document.Find("body")
+	body.Find("*").Each(func(i int, s *goquery.Selection) {
+		text := s.Clone().Children().Remove().End().Text()
+		if text == ws.keyword {
+			routes[text] = ws.findRouteFromNode(s)
+		}
+	})
+	return routes
+}
+
+func (ws *WebSpider) findRouteFromNode(node *goquery.Selection) []string {
+	route := make([]string, 0)
+	currentNode := node
+	for {
+		route = append(route, goquery.NodeName(currentNode))
+		if goquery.NodeName(currentNode) == "html" {
+			break
+		}
+		currentNode = currentNode.Parent()
+	}
+	// reverse
+	for i, j := 0, len(route)-1; i < j; i, j = i+1, j-1 {
+		route[i], route[j] = route[j], route[i]
+	}
+	return route
 }
 
 func GoquerySample() {
-	ws := NewWebSpider()
+	ws := NewWebSpider(
+		"https://ja.wikipedia.org/wiki/%E5%9B%BD%E3%81%AE%E4%B8%80%E8%A6%A7_(%E5%A4%A7%E9%99%B8%E5%88%A5)",
+		"バクー",
+	)
 	ws.Run()
 }
 
