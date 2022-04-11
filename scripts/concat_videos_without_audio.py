@@ -38,9 +38,9 @@ def comb_movie(movie_files,out_path):
             ret, frame = movie.read()
 
 # ディレクトリ内の動画をリストで取り出す
-files = sorted(glob.glob("../files/*.mp4"))
+files = sorted(glob.glob("../project/samples/file_downloader/files/*.mp4"))
 
 # 出力ファイル名
-out_path = "../files/all.mp4"
+out_path = "./test/all.mp4"
 
 comb_movie(files,out_path)
